@@ -1,0 +1,113 @@
+name: Temporary verified macOS ARM64 UI Fix V2 Build
+
+on:
+  push:
+    branches:
+      - fix/system-proxy-layout-20260810-200152
+
+permissions:
+  contents: read
+
+env:
+  CARGO_INCREMENTAL: 0
+  HUSKY: 0
+  NODE_OPTIONS: --max_old_space_size=4096
+  RUST_BACKTRACE: short
+
+jobs:
+  build-macos-arm64:
+    name: Build and verify ad-hoc signed macOS ARM64 UI fix V2 DMG
+    runs-on: macos-14
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout temporary branch
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: temporary-macos-arm64
+          key: clash-verge-macos-arm64-adhoc
+          workspaces: |
+            . -> target
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run bypass transition tests
+        run: pnpm test -- src/components/setting/mods/sysproxy-bypass.test.ts
+
+      - name: Typecheck UI fix
+        run: pnpm run typecheck
+
+      - name: Prepare macOS ARM64 sidecars and resources
+        run: pnpm run prebuild aarch64-apple-darwin
+
+      - name: Write ad-hoc signing configuration
+        run: |
+          node -e 'require("fs").writeFileSync("tauri.adhoc.conf.json", JSON.stringify({bundle:{createUpdaterArtifacts:false,macOS:{signingIdentity:"-",hardenedRuntime:false}}}, null, 2))'
+          cat tauri.adhoc.conf.json
+
+      - name: Build ad-hoc signed Apple Silicon DMG
+        run: >-
+          pnpm tauri build
+          --target aarch64-apple-darwin
+          --bundles dmg
+          --config ./tauri.adhoc.conf.json
+
+      - name: Mount DMG and strictly verify signature and architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          dmgs=(target/aarch64-apple-darwin/release/bundle/dmg/*.dmg)
+          test "${#dmgs[@]}" -eq 1
+          dmg="${dmgs[0]}"
+          mount_dir="$(mktemp -d)"
+          cleanup() {
+            hdiutil detach "$mount_dir" -quiet || true
+            rmdir "$mount_dir" || true
+          }
+          trap cleanup EXIT
+          hdiutil attach "$dmg" -mountpoint "$mount_dir" -nobrowse -readonly
+          app="$(find "$mount_dir" -maxdepth 1 -type d -name '*.app' -print -quit)"
+          test -n "$app"
+          executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")"
+          {
+            echo "DMG: $dmg"
+            echo "APP: $app"
+            echo "EXECUTABLE: $executable"
+            file "$app/Contents/MacOS/$executable"
+            lipo -archs "$app/Contents/MacOS/$executable"
+            codesign --verify --deep --strict --verbose=4 "$app"
+            codesign --display --verbose=4 "$app"
+          } 2>&1 | tee macos-adhoc-verification.txt
+          lipo -archs "$app/Contents/MacOS/$executable" | tr ' ' '\n' | grep -qx arm64
+          grep -q 'valid on disk' macos-adhoc-verification.txt
+          grep -q 'satisfies its Designated Requirement' macos-adhoc-verification.txt
+
+      - name: Upload verified DMG and report
+        uses: actions/upload-artifact@v7
+        with:
+          name: clash-verge-macos-arm64-ui-fix-v2-adhoc
+          path: |
+            target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            macos-adhoc-verification.txt
+          if-no-files-found: error
