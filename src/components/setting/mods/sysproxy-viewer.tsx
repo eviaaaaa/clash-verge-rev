@@ -116,21 +116,6 @@ const settingRowSx = {
   },
 } as const
 
-const descriptiveSettingRowSx = {
-  ...settingRowSx,
-  alignItems: 'flex-start',
-  paddingBlock: '8px',
-  '& .MuiListItemText-secondary': {
-    marginTop: '2px',
-    lineHeight: 1.45,
-    overflow: 'visible',
-  },
-  '& .MuiSwitch-root': {
-    marginTop: '2px',
-    flexShrink: 0,
-  },
-} as const
-
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
   const systemName = getSystem()
@@ -623,14 +608,18 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         {!value.pac && (
-          <ListItem sx={descriptiveSettingRowSx}>
+          <ListItem sx={settingRowSx}>
             <ListItemText
               primary={t(
                 'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
               )}
-              secondary={t(
+              sx={{ maxWidth: 'fit-content' }}
+            />
+            <TooltipIcon
+              title={t(
                 'settings.modals.sysproxy.fields.defaultBypassDescription',
               )}
+              sx={{ opacity: '0.7' }}
             />
             <Switch
               edge="end"
@@ -653,6 +642,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                       ),
                 }))
               }
+              sx={{ marginLeft: 'auto' }}
             />
           </ListItem>
         )}
