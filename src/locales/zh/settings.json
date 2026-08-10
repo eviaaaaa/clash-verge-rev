@@ -458,10 +458,11 @@
         "usePacMode": "使用 PAC 模式",
         "proxyGuard": "系统代理守卫",
         "guardDuration": "代理守卫间隔",
-        "alwaysUseDefaultBypass": "始终使用默认绕过",
+        "alwaysUseDefaultBypass": "保留系统默认绕过",
+        "defaultBypassDescription": "开启后保留系统默认绕过，并追加下方自定义项；关闭后仅使用下方自定义项。",
         "enableBypassCheck": "验证代理绕过格式",
-        "proxyBypass": "代理绕过设置：",
-        "bypass": "当前绕过：",
+        "proxyBypass": "自定义绕过：",
+        "bypass": "系统默认绕过：",
         "pacScriptContent": "PAC 脚本内容"
       },
       "tooltips": {

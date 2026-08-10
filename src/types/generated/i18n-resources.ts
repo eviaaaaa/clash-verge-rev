@@ -1100,6 +1100,7 @@ export interface TranslationResources {
           fields: {
             alwaysUseDefaultBypass: string
             bypass: string
+            defaultBypassDescription: string
             enableBypassCheck: string
             enableStatus: string
             guardDuration: string

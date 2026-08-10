@@ -210,10 +210,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   }, [embeddedServerPort, value.proxy_host])
 
   const bypassError =
-    value.enable_bypass_check &&
-    !value.pac &&
-    !value.use_default &&
-    value.bypass
+    value.enable_bypass_check && !value.pac && value.bypass
       ? !validReg.test(value.bypass)
       : false
 
@@ -317,7 +314,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (
       value.enable_bypass_check &&
       !value.pac &&
-      !value.use_default &&
       value.bypass &&
       !validReg.test(value.bypass)
     ) {
@@ -576,6 +572,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               primary={t(
                 'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
               )}
+              secondary={t(
+                'settings.modals.sysproxy.fields.defaultBypassDescription',
+              )}
             />
             <Switch
               edge="end"
@@ -614,7 +613,22 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           </ListItem>
         )}
 
-        {!value.pac && !value.use_default && (
+        {!value.pac && value.use_default && (
+          <>
+            <ListItemText
+              primary={t('settings.modals.sysproxy.fields.bypass')}
+            />
+            <Box sx={{ padding: '0 2px 5px' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {splitBypass(defaultBypass()).map((item) => (
+                  <Chip key={item} label={item} size="small" />
+                ))}
+              </Box>
+            </Box>
+          </>
+        )}
+
+        {!value.pac && (
           <BaseSplitChipEditor
             value={value.bypass ?? ''}
             separator={separator}
@@ -641,21 +655,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               </ListItem>
             )}
           />
-        )}
-
-        {!value.pac && value.use_default && (
-          <>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.bypass')}
-            />
-            <Box sx={{ padding: '0 2px 5px' }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {splitBypass(defaultBypass()).map((item) => (
-                  <Chip key={item} label={item} size="small" />
-                ))}
-              </Box>
-            </Box>
-          </>
         )}
 
         {value.pac && (

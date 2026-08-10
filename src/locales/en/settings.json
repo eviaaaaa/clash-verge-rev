@@ -458,10 +458,11 @@
         "usePacMode": "Use PAC Mode",
         "proxyGuard": "Proxy Guard",
         "guardDuration": "Guard Duration",
-        "alwaysUseDefaultBypass": "Always use Default Bypass",
+        "alwaysUseDefaultBypass": "Keep System Default Bypass",
+        "defaultBypassDescription": "When enabled, keep the system defaults and append the custom entries below; when disabled, use only the custom entries below.",
         "enableBypassCheck": "Validate Proxy Bypass Format",
-        "proxyBypass": "Proxy Bypass Settings: ",
-        "bypass": "Bypass: ",
+        "proxyBypass": "Custom Bypass: ",
+        "bypass": "System Default Bypass: ",
         "pacScriptContent": "PAC Script Content"
       },
       "tooltips": {
